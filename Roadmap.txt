@@ -139,7 +139,7 @@ Milestone 3: Desktop UI (Week 3-4) - Status: In Progress
 Deliverables:
 - PySide6 main window: Import, Calculate, Plot, Export.
 - Table preview + output log + embedded matplotlib canvas (implemented).
-- Plot action wiring with projection/polar-grid controls and controller guard behavior.
+- Plot action wiring with projection/polar-grid controls and controller guard behavior (implemented, with controller tests).
 - Error dialogs and non-blocking status updates.
 Exit criteria:
 - End-to-end workflow succeeds from raw file to exported outputs.
