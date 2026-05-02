@@ -176,6 +176,38 @@ class TestMainWindowController(unittest.TestCase):
         self.assertIsNone(controller.last_export_path)
         self.assertIsNone(controller.last_issues_export_path)
 
+    def test_handle_plot_without_calculate_emits_error(self):
+        statuses: list[str] = []
+        errors: list[str] = []
+        controller = MainWindowController(
+            status_sink=statuses.append,
+            error_sink=errors.append,
+        )
+        controller.handle_import("sample_data/milestone1_input.csv")
+
+        controller.handle_plot()
+
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(
+            errors[-1], "No calculated results available. Use Calculate first."
+        )
+        self.assertNotIn("Plot action triggered", " ".join(statuses))
+
+    def test_handle_plot_after_calculate_emits_status(self):
+        statuses: list[str] = []
+        errors: list[str] = []
+        controller = MainWindowController(
+            status_sink=statuses.append,
+            error_sink=errors.append,
+        )
+        controller.handle_import("sample_data/milestone1_input.csv")
+        controller.handle_calculate()
+
+        controller.handle_plot()
+
+        self.assertEqual(errors, [])
+        self.assertIn("Plot action triggered for", statuses[-1])
+
     def test_handle_export_without_calculate_emits_error(self):
         statuses: list[str] = []
         errors: list[str] = []

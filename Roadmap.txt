@@ -138,7 +138,8 @@ Exit criteria: met
 Milestone 3: Desktop UI (Week 3-4) - Status: In Progress
 Deliverables:
 - PySide6 main window: Import, Calculate, Plot, Export.
-- Table preview + output log + embedded matplotlib canvas.
+- Table preview + output log + embedded matplotlib canvas (implemented).
+- Plot action wiring with projection/polar-grid controls and controller guard behavior.
 - Error dialogs and non-blocking status updates.
 Exit criteria:
 - End-to-end workflow succeeds from raw file to exported outputs.
@@ -180,10 +181,10 @@ Risk: UI tightly coupled to domain logic.
 Mitigation: Enforce domain API boundaries and test computation modules independently.
 
 11) Immediate Next Actions (This Week)
-1. Begin Milestone 3 UI scaffolding (main window + action wiring).
-2. Integrate table preview and computed-results log in UI.
-3. Embed matplotlib stereonet canvas and connect plotting actions.
-4. Add UI smoke tests and manual end-to-end workflow checks.
+1. Complete UI smoke tests for plotting controls and action flows.
+2. Run a manual end-to-end workflow check (Import -> Calculate -> Plot -> Export).
+3. Address deferred plotting-options refinements identified in Milestone 2.
+4. Prepare Milestone 3 completion checklist against exit criteria.
 
 12) Definition of Done (MVP)
 MVP is done when a user can:

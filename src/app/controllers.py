@@ -117,14 +117,11 @@ class MainWindowController:
         )
 
     def handle_plot(self) -> None:
-        """Placeholder action hook for future plotting wiring."""
-        if self.selected_input_path is None:
-            self.error_sink("No input file selected. Use Import first.")
+        """Validate plot prerequisites and emit plot-action status."""
+        if self.computed_df is None:
+            self.error_sink("No calculated results available. Use Calculate first.")
             return
-
-        self.status_sink(
-            "Plot action triggered (Milestone 3 scaffold; plotting wiring pending)."
-        )
+        self.status_sink(f"Plot action triggered for {len(self.computed_df)} row(s).")
 
     def handle_export(self) -> None:
         """Export computed orientations and validation issues to CSV files."""
