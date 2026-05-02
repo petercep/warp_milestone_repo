@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from typing import Any
 
 from src.app.controllers import MainWindowController
 
@@ -19,6 +20,9 @@ try:
         QVBoxLayout,
         QWidget,
         QHBoxLayout,
+        QTableWidget,
+        QTableWidgetItem,
+        QTabWidget,
     )
 except ModuleNotFoundError as exc:  # pragma: no cover - depends on local UI deps
     raise RuntimeError(
@@ -29,6 +33,7 @@ except ModuleNotFoundError as exc:  # pragma: no cover - depends on local UI dep
 
 class MainWindow(QMainWindow):
     """Initial desktop shell for Milestone 3."""
+    MAX_PREVIEW_ROWS = 200
 
     def __init__(self) -> None:
         super().__init__()
@@ -38,6 +43,14 @@ class MainWindow(QMainWindow):
         self.status_label = QLabel("Ready. Use Import to select input data.")
         self.log_output = QPlainTextEdit()
         self.log_output.setReadOnly(True)
+
+        self.preview_tabs = QTabWidget()
+        self.input_preview_table = QTableWidget()
+        self.computed_preview_table = QTableWidget()
+        self.issues_preview_table = QTableWidget()
+        self.preview_tabs.addTab(self.input_preview_table, "Input Preview")
+        self.preview_tabs.addTab(self.computed_preview_table, "Computed Preview")
+        self.preview_tabs.addTab(self.issues_preview_table, "Validation Issues")
         self.canvas_placeholder = QLabel(
             "Stereonet canvas placeholder (to be embedded in next task)."
         )
@@ -69,15 +82,16 @@ class MainWindow(QMainWindow):
         ):
             button_row.addWidget(button)
         layout.addLayout(button_row)
+        layout.addWidget(self.preview_tabs)
 
         layout.addWidget(self.canvas_placeholder)
         layout.addWidget(self.log_output)
         self.setCentralWidget(container)
 
         self.import_btn.clicked.connect(self._on_import_triggered)
-        self.calculate_btn.clicked.connect(self.controller.handle_calculate)
+        self.calculate_btn.clicked.connect(self._on_calculate_triggered)
         self.plot_btn.clicked.connect(self.controller.handle_plot)
-        self.export_btn.clicked.connect(self.controller.handle_export)
+        self.export_btn.clicked.connect(self._on_export_triggered)
 
     def _build_toolbar(self) -> None:
         toolbar = QToolBar("Actions")
@@ -89,9 +103,9 @@ class MainWindow(QMainWindow):
         export_action = toolbar.addAction("Export")
 
         import_action.triggered.connect(self._on_import_triggered)
-        calculate_action.triggered.connect(self.controller.handle_calculate)
+        calculate_action.triggered.connect(self._on_calculate_triggered)
         plot_action.triggered.connect(self.controller.handle_plot)
-        export_action.triggered.connect(self.controller.handle_export)
+        export_action.triggered.connect(self._on_export_triggered)
 
     def _on_import_triggered(self) -> None:
         file_path, _ = QFileDialog.getOpenFileName(
@@ -101,6 +115,87 @@ class MainWindow(QMainWindow):
             "Data files (*.csv *.xlsx *.xlsm);;All files (*)",
         )
         self.controller.handle_import(file_path or None)
+        self._refresh_previews_after_import()
+
+    def _on_calculate_triggered(self) -> None:
+        self.controller.handle_calculate()
+        self._refresh_previews_after_calculate()
+        summary = self.controller.last_calculation_summary
+        if summary is not None:
+            self._append_log(
+                "Calculation summary: "
+                f"input={summary['input_rows']}, "
+                f"valid={summary['valid_rows']}, "
+                f"invalid={summary['invalid_rows']}, "
+                f"issues={summary['issues_count']}"
+            )
+
+    def _on_export_triggered(self) -> None:
+        self.controller.handle_export()
+        if (
+            self.controller.last_export_path is not None
+            and self.controller.last_issues_export_path is not None
+        ):
+            self._append_log(
+                "Export files:\n"
+                f"- {self.controller.last_export_path}\n"
+                f"- {self.controller.last_issues_export_path}"
+            )
+
+    def _refresh_previews_after_import(self) -> None:
+        self._fill_table_from_rows(
+            self.input_preview_table,
+            self.controller.imported_df,
+        )
+        self._fill_table_from_rows(
+            self.computed_preview_table,
+            None,
+        )
+        self._fill_table_from_rows(
+            self.issues_preview_table,
+            None,
+        )
+        if self.controller.imported_df is not None:
+            shown = min(len(self.controller.imported_df), self.MAX_PREVIEW_ROWS)
+            self._append_log(f"Input preview updated ({shown} rows shown).")
+
+    def _refresh_previews_after_calculate(self) -> None:
+        self._fill_table_from_rows(
+            self.computed_preview_table,
+            self.controller.computed_df,
+        )
+        self._fill_table_from_rows(
+            self.issues_preview_table,
+            self.controller.issues_df,
+        )
+        if self.controller.computed_df is not None:
+            shown = min(len(self.controller.computed_df), self.MAX_PREVIEW_ROWS)
+            self._append_log(f"Computed preview updated ({shown} rows shown).")
+        if self.controller.issues_df is not None:
+            shown = min(len(self.controller.issues_df), self.MAX_PREVIEW_ROWS)
+            self._append_log(f"Issues preview updated ({shown} rows shown).")
+
+    def _fill_table_from_rows(
+        self,
+        table: QTableWidget,
+        rows_obj: Any | None,
+    ) -> None:
+        table.clear()
+        if rows_obj is None:
+            table.setRowCount(0)
+            table.setColumnCount(0)
+            return
+
+        preview = rows_obj.head(self.MAX_PREVIEW_ROWS)
+        table.setRowCount(len(preview))
+        table.setColumnCount(len(preview.columns))
+        table.setHorizontalHeaderLabels([str(column) for column in preview.columns])
+
+        for row_idx, row in enumerate(preview.itertuples(index=False, name=None)):
+            for col_idx, value in enumerate(row):
+                display = "" if value is None else str(value)
+                table.setItem(row_idx, col_idx, QTableWidgetItem(display))
+        table.resizeColumnsToContents()
 
     def append_status(self, message: str) -> None:
         self.status_label.setText(message)
