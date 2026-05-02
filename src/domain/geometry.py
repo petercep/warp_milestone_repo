@@ -15,6 +15,17 @@ def normalize(vector: np.ndarray) -> np.ndarray:
     return vector / norm
 
 
+def _safe_atan_ratio(numerator: float, denominator: float) -> float:
+    """Return atan(numerator / denominator) with division-by-zero guards."""
+    if abs(denominator) < 1e-12:
+        if numerator > 0:
+            return math.pi / 2
+        if numerator < 0:
+            return -math.pi / 2
+        return 0.0
+    return math.atan(numerator / denominator)
+
+
 def trend_plunge_to_vector(trend_deg: float, plunge_deg: float) -> np.ndarray:
     """
     Convert trend/plunge to an ENU vector.
@@ -54,18 +65,39 @@ def pole_from_alpha_beta(
     reference_line_deg: float,
 ) -> np.ndarray:
     """
-    Compute a plane pole vector from alpha/beta and core orientation.
-    Alpha is the angle between plane and core axis (0-90).
-    Beta is clockwise downhole angle from reference line (0-360).
-    """
-    axis = trend_plunge_to_vector(trend_deg, plunge_deg)
-    e1, e2 = build_core_frame(axis)
-    alpha = math.radians(alpha_deg)
-    beta = math.radians((reference_line_deg - beta_deg) % 360.0)
+    Compute a plane pole vector using the same transform sequence as
+    workbook VBA function ConvAlphaBeta.
 
-    radial = math.cos(beta) * e1 + math.sin(beta) * e2
-    pole = math.sin(alpha) * axis + math.cos(alpha) * radial
-    return normalize(pole)
+    Returned vector is ENU (east, north, up).
+    """
+    pi = math.pi
+    g = reference_line_deg * pi / 180.0
+    a_ = (90.0 - alpha_deg) * pi / 180.0
+    b_ = beta_deg * pi / 180.0
+    an = plunge_deg * pi / 180.0
+    bn = trend_deg * pi / 180.0
+
+    xd = math.cos(a_)
+    yd = -math.sin(a_) * math.cos(b_)
+    zd = -math.sin(a_) * math.sin(b_)
+
+    x = xd
+    y = math.cos(g) * yd - math.sin(g) * zd
+    z = math.sin(g) * yd + math.cos(g) * zd
+
+    north = (
+        math.cos(an) * math.cos(bn) * x
+        + math.sin(an) * math.cos(bn) * y
+        - math.sin(bn) * z
+    )
+    east = (
+        math.cos(an) * math.sin(bn) * x
+        + math.sin(an) * math.sin(bn) * y
+        + math.cos(bn) * z
+    )
+    up = -math.sin(an) * x + math.cos(an) * y
+
+    return normalize(np.array([east, north, up], dtype=float))
 
 
 def azimuth_from_en(east: float, north: float) -> float:
@@ -74,15 +106,40 @@ def azimuth_from_en(east: float, north: float) -> float:
 
 
 def pole_to_plane_orientation(pole: np.ndarray) -> tuple[float, float, float]:
-    """Convert a pole vector to dip, dip direction, and strike."""
+    """
+    Convert pole vector to dip, dip direction, and strike using
+    VBA ConvAlphaBeta dip/direction correction logic.
+    """
     pole = normalize(pole)
-    if pole[2] < 0:
-        pole = -pole
+    east, north, up = float(pole[0]), float(pole[1]), float(pole[2])
 
-    horizontal = math.hypot(pole[0], pole[1])
-    dip = math.degrees(math.atan2(horizontal, pole[2]))
-    pole_azimuth = azimuth_from_en(pole[0], pole[1])
-    dip_direction = (pole_azimuth + 180.0) % 360.0
+    if north >= 0 and east >= 0:
+        q = 0.0
+    elif north <= 0 and east >= 0:
+        q = 180.0
+    elif north >= 0 and east <= 0:
+        q = 360.0
+    else:
+        q = 180.0
+
+    horizontal = math.sqrt(north**2 + east**2)
+    dip_temp = 90.0 - math.degrees(_safe_atan_ratio(up, horizontal))
+    if dip_temp > 90.0:
+        dip = 180.0 - dip_temp
+    else:
+        dip = dip_temp
+
+    q2 = 180.0 if (dip_temp > 90.0 or dip_temp < 0.0) else 0.0
+    dirn_temp = q + q2 + math.degrees(_safe_atan_ratio(east, north))
+    if dirn_temp > 360.0:
+        dip_direction = dirn_temp - 360.0
+    elif dirn_temp < 0.0:
+        dip_direction = dirn_temp + 360.0
+    else:
+        dip_direction = dirn_temp
+
+    dip = float(int(dip))
+    dip_direction = float(int(dip_direction))
     strike = (dip_direction - 90.0) % 360.0
     return dip, dip_direction, strike
 

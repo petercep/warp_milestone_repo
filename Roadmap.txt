@@ -93,9 +93,11 @@ Completed deliverables:
 - Initial convention configuration.
 - Unit tests for geometry conversion.
 - Sample input/output and validation error artifacts.
+- Geometry conversion refactored to match spreadsheet VBA ConvAlphaBeta logic.
 Validation summary:
 - Unit test suite passing (geometry, validation, and pipeline tests).
 - Sample pipeline run completed successfully with invalid-row reporting.
+- Workbook sample cases checked against Python outputs for dip/direction consistency.
 Exit criteria: met
 - Known test dataset produces expected dip/dip direction values.
 - Invalid rows are reported without crashing.

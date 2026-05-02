@@ -5,29 +5,29 @@ from src.domain.structural_calculations import alpha_beta_to_orientation
 
 
 class TestGeometry(unittest.TestCase):
-    def test_alpha_beta_vertical_plane_from_horizontal_core(self):
+    def test_matches_workbook_case_row2(self):
         result = alpha_beta_to_orientation(
-            alpha=90.0,
-            beta=0.0,
-            trend_of_hole=0.0,
-            plunge_of_hole=0.0,
-            reference_line=0.0,
+            alpha=60.0,
+            beta=10.0,
+            trend_of_hole=180.0,
+            plunge_of_hole=60.0,
+            reference_line=180.0,
         )
-        self.assertAlmostEqual(result.dip, 90.0, places=6)
-        self.assertAlmostEqual(result.dip_direction, 180.0, places=6)
-        self.assertAlmostEqual(result.strike, 90.0, places=6)
+        self.assertEqual(result.dip, 59.0)
+        self.assertEqual(result.dip_direction, 5.0)
+        self.assertEqual(result.strike, 275.0)
 
-    def test_alpha_beta_parallel_plane_from_horizontal_core(self):
+    def test_matches_workbook_case_row6(self):
         result = alpha_beta_to_orientation(
-            alpha=0.0,
-            beta=0.0,
-            trend_of_hole=0.0,
-            plunge_of_hole=0.0,
-            reference_line=0.0,
+            alpha=35.0,
+            beta=186.0,
+            trend_of_hole=180.0,
+            plunge_of_hole=60.0,
+            reference_line=180.0,
         )
-        self.assertAlmostEqual(result.dip, 90.0, places=6)
-        self.assertAlmostEqual(result.dip_direction, 90.0, places=6)
-        self.assertAlmostEqual(result.strike, 0.0, places=6)
+        self.assertEqual(result.dip, 25.0)
+        self.assertEqual(result.dip_direction, 191.0)
+        self.assertEqual(result.strike, 101.0)
 
     def test_pole_is_normalized(self):
         result = alpha_beta_to_orientation(
