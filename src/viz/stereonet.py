@@ -13,6 +13,26 @@ import mplstereonet  # noqa: F401
 import pandas as pd
 
 
+def _add_polar_grid_overlay(fig: plt.Figure, reference_ax: plt.Axes) -> None:
+    """Overlay a simple polar-style grid beneath a stereonet axis."""
+    left, bottom, width, height = reference_ax.get_position().bounds
+    polar_ax = fig.add_axes([left, bottom, width, height], projection="polar")
+    polar_ax.set_theta_zero_location("N")
+    polar_ax.set_theta_direction(-1)
+    polar_ax.set_rlim(0.0, 90.0)
+    polar_ax.set_thetagrids(list(range(0, 360, 30)))
+    polar_ax.set_rticks(list(range(10, 91, 10)))
+    polar_ax.set_xticklabels([])
+    polar_ax.set_yticklabels([])
+    polar_ax.grid(True, linestyle=":", linewidth=0.6, color="0.75")
+    polar_ax.patch.set_alpha(0.0)
+    for spine in polar_ax.spines.values():
+        spine.set_visible(False)
+    polar_ax.set_zorder(0)
+    reference_ax.set_zorder(1)
+    reference_ax.set_facecolor("none")
+
+
 def filter_computed_rows(
     df: pd.DataFrame,
     filters: Mapping[str, Any] | None = None,
@@ -45,6 +65,7 @@ def plot_poles(
     output_path: str | Path,
     filters: Mapping[str, Any] | None = None,
     title: str | None = None,
+    polar_grid: bool = False,
 ) -> Path:
     """Plot poles on stereonet and export PNG/SVG."""
     filtered = filter_computed_rows(df, filters=filters)
@@ -59,6 +80,8 @@ def plot_poles(
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111, projection="stereonet")
     fig.subplots_adjust(top=0.78)
+    if polar_grid:
+        _add_polar_grid_overlay(fig, ax)
     ax.grid(True)
     strikes = filtered["strike"].astype(float).to_numpy(copy=True)
     dips = filtered["dip"].astype(float).to_numpy(copy=True)

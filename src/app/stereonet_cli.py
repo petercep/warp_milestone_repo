@@ -15,6 +15,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--title", default=None, help="Optional plot title.")
     parser.add_argument("--hole-id", default=None, help="Optional hole_id filter.")
     parser.add_argument(
+        "--polar-grid",
+        action="store_true",
+        help="Overlay a polar-style grid beneath the stereonet.",
+    )
+    parser.add_argument(
         "--structure-type", default=None, help="Optional structure_type filter."
     )
     return parser
@@ -36,6 +41,7 @@ def main() -> int:
         output_path=args.output,
         filters=filters or None,
         title=args.title,
+        polar_grid=args.polar_grid,
     )
     print(f"Stereonet export complete: {out}")
     return 0

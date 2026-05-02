@@ -32,3 +32,16 @@ class TestStereonet(unittest.TestCase):
             plot_poles(df, out, title="Test")
             self.assertTrue(out.exists())
             self.assertGreater(out.stat().st_size, 0)
+
+    def test_plot_poles_exports_png_with_polar_grid(self):
+        df = pd.DataFrame(
+            [
+                {"hole_id": "A", "dip": 35.0, "dip_direction": 120.0, "strike": 30.0},
+                {"hole_id": "B", "dip": 50.0, "dip_direction": 210.0, "strike": 120.0},
+            ]
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out = Path(tmp_dir) / "stereonet_polar_grid.png"
+            plot_poles(df, out, title="Test", polar_grid=True)
+            self.assertTrue(out.exists())
+            self.assertGreater(out.stat().st_size, 0)

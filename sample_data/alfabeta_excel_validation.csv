@@ -1,0 +1,8 @@
+row,trend,plunge,alpha,beta,ref,computed_dip,computed_direction,expected_dip_vba,expected_direction_vba,dip_match,direction_match,excel_F_formula,excel_G_formula_or_value,excel_F_cached_value,excel_G_cached_value
+2,180.0,60.0,60.0,10.0,180.0,59,5,59,5,True,True,<openpyxl.worksheet.formula.ArrayFormula object at 0x719c7ea6ff50>,#VALUE!,#VALUE!,#VALUE!
+3,180.0,60.0,25.0,20.0,180.0,86,198,86,198,True,True,<openpyxl.worksheet.formula.ArrayFormula object at 0x719c79711cd0>,#VALUE!,#VALUE!,#VALUE!
+4,180.0,60.0,34.0,30.0,180.0,82,24,82,24,True,True,<openpyxl.worksheet.formula.ArrayFormula object at 0x719c797124b0>,#VALUE!,#VALUE!,#VALUE!
+5,180.0,60.0,55.0,66.0,180.0,53,40,53,40,True,True,<openpyxl.worksheet.formula.ArrayFormula object at 0x719c797128d0>,#VALUE!,#VALUE!,#VALUE!
+6,180.0,60.0,35.0,186.0,180.0,25,191,25,191,True,True,<openpyxl.worksheet.formula.ArrayFormula object at 0x719c79712cf0>,#VALUE!,#VALUE!,#VALUE!
+7,180.0,60.0,60.0,275.0,180.0,43,313,43,313,True,True,<openpyxl.worksheet.formula.ArrayFormula object at 0x719c79713110>,#VALUE!,#VALUE!,#VALUE!
+8,180.0,60.0,60.0,310.0,180.0,53,331,53,331,True,True,<openpyxl.worksheet.formula.ArrayFormula object at 0x719c79713530>,#VALUE!,#VALUE!,#VALUE!
