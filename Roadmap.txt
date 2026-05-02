@@ -112,12 +112,15 @@ Completed deliverables:
 - Plotting CLI entrypoint implemented (`src/app/stereonet_cli.py`).
 - Stereonet configuration defaults added in `src/config/defaults.py` with projection mode support (`equal-area` default, optional `equal-angle`) and polar-grid control.
 - CLI options expose projection selection and grid toggling (`--projection`, `--polar-grid`, `--no-polar-grid`).
+- Standalone stereonet example script added for quick local verification (`scripts/plot_stereonet_example.py`).
 - Plotting dependencies and stereonet test coverage added.
 Validation summary:
 - Full unit test suite passing, including stereonet and stereonet CLI configuration tests (13/13).
 - End-to-end stereonet export validated on computed sample data:
   - `sample_data/milestone2_poles.png`
   - `sample_data/milestone2_poles.svg`
+- Script-based stereonet example export validated:
+  - `sample_data/stereonet_example_from_prompt.png`
 - Workbook-derived stereonet review artifacts generated, including row-labeled polar-grid exports:
   - `sample_data/alfabeta_stereonet_review_polar_grid.png`
   - `sample_data/alfabeta_stereonet_review_polar_grid.svg`
@@ -129,8 +132,10 @@ Validation summary:
 Exit criteria: met
 - Correct pole placement verified on synthetic reference cases.
 - Exported figures are reproducible.
+- Deferred TODO (post-Milestone 2):
+  - Improve plotting options (deferred for a later pass).
 
-Milestone 3: Desktop UI (Week 3-4)
+Milestone 3: Desktop UI (Week 3-4) - Status: In Progress
 Deliverables:
 - PySide6 main window: Import, Calculate, Plot, Export.
 - Table preview + output log + embedded matplotlib canvas.
