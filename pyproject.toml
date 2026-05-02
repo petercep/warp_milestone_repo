@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "geology-workstation"
+version = "0.1.0"
+description = "Milestone 1 CLI pipeline for structural orientation computation"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.25",
+  "pandas>=2.0",
+  "openpyxl>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+

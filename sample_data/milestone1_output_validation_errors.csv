@@ -1,0 +1,6 @@
+source_row,column,message
+3,alpha,"alpha out of range [0.0, 90.0]"
+4,alpha,'alpha' must be numeric and non-empty.
+4,beta,"beta out of range [0.0, 360.0]"
+4,trend_of_hole,"trend_of_hole out of range [0.0, 360.0]"
+4,plunge_of_hole,"plunge_of_hole out of range [0.0, 90.0]"

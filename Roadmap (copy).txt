@@ -1,0 +1,485 @@
+Aim:
+To build a lightweight geotechnical structural geology workstation: import field logs → compute orientation → visualize stereonet + summaries.
+
+Here’s a practical architecture and approach that will keep it cross-platform and maintainable.
+
+1. Core architecture (separate concerns early)
+
+Design it as 4 layers:
+
+A. UI layer (Qt)
+PySide6 (recommended) or PyQt6
+Responsibilities:
+Load spreadsheet
+Show table preview
+Trigger calculations
+Display stereonet + outputs
+
+👉 Keep UI thin—no geology math inside widgets.
+
+B. Data layer
+pandas for spreadsheet ingestion + cleaning
+Handles:
+Excel / CSV import
+Column validation
+Missing data handling
+Unit normalization (if needed)
+
+C. Geology computation engine
+numpy for vector math
+Functions:
+alpha → beta conversion (core axis geometry)
+conversion to:
+strike
+dip
+dip direction
+vector normalization
+spherical coordinate transforms
+
+This should be a standalone module like:
+
+geometry.py
+structural_calculations.py
+
+D. Visualization layer
+
+You have two good routes:
+
+Option 1 (recommended): stereonet library
+mplstereonet (Matplotlib stereonet extension)
+
+Pros:
+
+Mature
+Easy integration with matplotlib canvas in Qt
+Widely used in structural geology
+Option 2:
+pyvista (3D spherical projection)
+more powerful but heavier
+2. Suggested tech stack
+UI
+PySide6
+or PyQt6 (license differences matter if commercial)
+Data + math
+pandas
+numpy
+Plotting
+matplotlib
+mplstereonet
+Optional
+scipy (if you later do clustering or pole density contours)
+
+3. Data flow pipeline
+
+Your program should behave like this:
+
+Step 1: Import
+Excel / CSV → pandas DataFrame
+
+Expected columns (example):
+
+hole_id
+depth_from
+depth_to
+alpha
+beta
+core_orientation_reference (optional)
+comments
+
+Step 2: Validate + normalize
+remove NaNs
+ensure angles are floats
+ensure alpha/beta ranges:
+alpha: 0–360 (or 0–180 depending convention)
+beta: 0–90
+Step 3: Geometry conversion
+
+Core idea:
+
+You convert alpha + beta (core scanline measurements) into plane orientation.
+
+Typical outputs:
+
+dip
+dip direction
+strike (optional)
+
+You’ll likely implement:
+
+def alpha_beta_to_dip_dipdir(alpha, beta, trend_of_hole, plunge_of_hole, reference_line):
+    ...
+    return dip, dip_direction
+
+This step depends heavily on your field convention, so you’ll want it configurable.
+
+Step 4: Vector conversion
+
+Convert plane → pole vector:
+normal_vector = spherical_to_cartesian(dip, dip_dir)
+Step 5: Visualization
+
+Using mplstereonet:
+
+Plot poles (scatter)
+Plot planes (optional great circles)
+Density contours (optional but powerful)
+4. Qt UI design (simple but effective)
+
+Keep it minimal:
+
+Main window layout:
+-------------------------------------
+| Toolbar: Import | Calculate | Plot|
+-------------------------------------
+| Table view (DataFrame preview)    |
+-------------------------------------
+| Stereonet canvas (matplotlib)     |
+-------------------------------------
+| Output log / computed results     |
+-------------------------------------
+
+Widgets:
+QTableView (for dataset preview)
+QPushButton (actions)
+Matplotlib FigureCanvas (for stereonet)
+
+5. Key implementation modules
+geometry.py
+
+
+alpha_beta_to_dip_dipdir()
+
+
+strike_dip_to_vector()
+
+
+vector_to_stereonet()
+
+
+io.py
+
+
+load_excel()
+
+
+validate_dataframe()
+
+
+stereonet.py
+
+
+plot_data()
+
+
+plot_density()
+
+
+ui_main.py
+
+
+Qt main window
+
+
+event handling
+
+
+
+6. Cross-platform considerations
+To ensure it runs everywhere:
+Use:
+
+
+PySide6 (best licensing + stability)
+
+
+avoid OS-specific file paths → use pathlib
+
+
+bundle with:
+
+
+PyInstaller (desktop app packaging)
+
+
+
+
+
+7. Common pitfalls (important in geotech apps)
+1. Angle conventions
+Alpha/beta methods vary between:
+
+
+oriented core
+
+
+televiewer logs
+
+
+structural geology conventions
+
+
+👉 Make this configurable in settings early.
+
+2. Dip direction vs strike confusion
+Always store:
+
+
+dip direction (0–360 azimuth)
+
+
+dip (0–90)
+
+
+Compute strike only as derived value.
+
+3. Core reference frame ambiguity
+You must define:
+
+
+core axis azimuth (trend)
+
+
+bottom-of-core orientation consistency (reference_line=180)
+option for top-of-core (reference_line = 0)
+
+
+
+8. Recommended development path
+Phase 1 (MVP)
+
+
+CLI script first:
+
+
+load Excel files
+
+
+compute dip/dip direction
+
+
+export CSV
+
+
+
+
+
+Phase 2
+
+
+Add stereonet plotting (matplotlib standalone)
+
+
+Phase 3
+
+
+Wrap into Qt UI
+
+
+Phase 4
+
+
+Add:
+
+
+filtering by lithology / structure type
+
+
+density contours
+
+
+export plots
+
+
+
+
+
+
+9. Optional upgrades later
+If you want to push it further:
+
+
+database backend (SQLite)
+
+
+project files (.json/.yaml)
+
+
+interactive stereonet picking
+
+
+uncertainty propagation
+
+
+cluster analysis of fracture sets
+
+
+
+==============================
+Improved roadmap version
+==============================
+
+Project Roadmap: Geotechnical Structural Geology Workstation
+
+1) Goal
+Build a lightweight, cross-platform desktop workstation that imports field logs, converts alpha/beta measurements to structural orientations, and visualizes results on a stereonet with exportable summaries.
+
+2) Success Criteria
+- Import CSV/XLSX files with validation and clear error messages.
+- Compute dip and dip direction (and optional strike) from alpha/beta using configurable conventions.
+- Plot poles/planes on stereonet and export figures/data.
+- Run on Linux/Windows/macOS from one codebase.
+- Provide reproducible results via tests and sample datasets.
+
+3) Scope
+In scope (MVP):
+- Data import and validation.
+- Core geometry conversion engine.
+- Stereonet plotting (poles first, planes optional).
+- Basic desktop UI for load/calculate/plot/export.
+
+Out of scope (initially):
+- Database persistence.
+- Advanced clustering/statistical interpretation.
+- Full 3D geological modeling.
+
+4) Architecture (separation of concerns)
+A. UI layer (Qt: PySide6 preferred)
+- File selection, table preview, run calculations, plot controls.
+- Keep UI thin: no geology math in widgets.
+
+B. Data layer (pandas)
+- Read CSV/XLSX.
+- Column mapping and validation.
+- Missing value handling and type normalization.
+
+C. Geology computation engine (numpy)
+- Alpha/beta to dip+dip direction conversion.
+- Strike derivation and vector transforms.
+- Convention-aware configuration (reference line, angle conventions).
+
+D. Visualization layer (matplotlib + mplstereonet)
+- Pole scatter (MVP).
+- Optional planes and density contours (later phase).
+
+5) Proposed Repository Structure
+- src/
+  - app/
+    - ui_main.py
+    - controllers.py
+  - domain/
+    - structural_calculations.py
+    - geometry.py
+    - conventions.py
+  - data/
+    - io.py
+    - validation.py
+  - viz/
+    - stereonet.py
+  - config/
+    - defaults.py
+- tests/
+  - test_geometry.py
+  - test_validation.py
+  - test_pipeline.py
+- sample_data/
+- docs/
+
+6) Data Contract (MVP)
+Required input fields:
+- hole_id
+- depth_from
+- depth_to
+- alpha
+- beta
+- trend_of_hole
+- plunge_of_hole
+
+Optional fields:
+- core_orientation_reference
+- lithology
+- structure_type
+- comments
+
+Validation rules:
+- Numeric parsing for angle/depth fields.
+- Angle bounds configurable by convention:
+  - alpha: 0-360 (or 0-180 based on selected method)
+  - beta: 0-90
+- Row-level error reporting with row index and reason.
+
+7) Milestones and Deliverables
+Milestone 1: Computation CLI (Week 1)
+Deliverables:
+- CLI script: import -> validate -> compute -> export CSV.
+- Initial convention configuration.
+- Unit tests for geometry conversion.
+Exit criteria:
+- Known test dataset produces expected dip/dip direction values.
+- Invalid rows are reported without crashing.
+
+Milestone 2: Stereonet Plotting (Week 2)
+Deliverables:
+- Standalone plotting module using mplstereonet.
+- Pole plotting and figure export (PNG/SVG).
+- Basic filtering (valid vs invalid computed rows).
+Exit criteria:
+- Correct pole placement verified on synthetic reference cases.
+- Exported figures are reproducible.
+
+Milestone 3: Desktop UI (Week 3-4)
+Deliverables:
+- PySide6 main window: Import, Calculate, Plot, Export.
+- Table preview + output log + embedded matplotlib canvas.
+- Error dialogs and non-blocking status updates.
+Exit criteria:
+- End-to-end workflow succeeds from raw file to exported outputs.
+- No geology logic in UI classes.
+
+Milestone 4: Hardening & Packaging (Week 5)
+Deliverables:
+- Cross-platform path handling (pathlib).
+- Packaging with PyInstaller.
+- User guide and sample project files.
+Exit criteria:
+- App bundle launches on target OSes.
+- Smoke tests pass on packaged build.
+
+8) Technical Decisions
+- UI: PySide6 (licensing and ecosystem fit).
+- Math/data: numpy + pandas.
+- Plotting: matplotlib + mplstereonet.
+- Optional later: scipy for density/cluster analysis.
+
+9) Quality Gates
+Before each milestone is marked complete:
+- Unit tests pass.
+- Static checks/lint pass.
+- Sample dataset run documented.
+- One manual QA run from import to export completed.
+
+10) Key Risks and Mitigations
+Risk: Convention ambiguity (alpha/beta definitions vary).
+Mitigation: Explicit convention profiles and visible selection in UI.
+
+Risk: Dip direction vs strike confusion in outputs.
+Mitigation: Store dip direction + dip as primary fields; compute strike as derived.
+
+Risk: Core reference-frame inconsistency.
+Mitigation: Require trend/plunge inputs and validate reference-line assumptions.
+
+Risk: UI tightly coupled to domain logic.
+Mitigation: Enforce domain API boundaries and test computation modules independently.
+
+11) Immediate Next Actions (This Week)
+1. Finalize and document one canonical measurement convention.
+2. Build Milestone 1 CLI pipeline with sample data.
+3. Add baseline geometry/validation tests.
+4. Prepare 3 synthetic validation cases with known expected orientations.
+
+12) Definition of Done (MVP)
+MVP is done when a user can:
+- Load a field log file.
+- See validation feedback.
+- Compute structural orientations with chosen convention.
+- Plot poles on stereonet.
+- Export both computed table and plotted figure reliably.

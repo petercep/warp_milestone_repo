@@ -1,0 +1,7 @@
+hole_id,depth,alpha,beta,trend_of_hole,plunge_of_hole,core_orientation_reference,comments
+DDH001,10,90,0,0,0,180,Valid row (alpha at upper bound)
+DDH001,12,35,45,120,20,180,Valid row
+DDH001,14,60,270,45,10,,Missing reference should default
+DDH002,16,120,50,80,25,180,Invalid alpha range
+DDH002,18,bad,400,400,95,180,Invalid numeric and angle ranges
+

@@ -1,0 +1,4 @@
+hole_id,depth,alpha,beta,trend_of_hole,plunge_of_hole,core_orientation_reference,comments,lithology,structure_type,dip,dip_direction,strike,pole_east,pole_north,pole_up
+DDH001,10,90.0,0,0,0,180.0,Valid row (alpha at upper bound),,,90.0,180.0,90.0,6.123233995736766e-17,1.0,7.498798913309288e-33
+DDH001,12,35.0,45,120,20,180.0,Valid row,,,69.62753632386391,338.16123117230245,248.16123117230245,0.3487274330656081,-0.8701727207761548,0.3481215498134181
+DDH001,14,60.0,270,45,10,180.0,Missing reference should default,,,49.99999999999999,45.0,315.0,0.5416752204197018,0.5416752204197018,-0.6427876096865395
