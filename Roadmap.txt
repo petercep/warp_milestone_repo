@@ -46,6 +46,7 @@ D. Visualization layer (matplotlib + mplstereonet)
   - app/
     - ui_main.py
     - controllers.py
+    - stereonet_cli.py
   - domain/
     - structural_calculations.py
     - geometry.py
@@ -61,6 +62,7 @@ D. Visualization layer (matplotlib + mplstereonet)
   - test_geometry.py
   - test_validation.py
   - test_pipeline.py
+  - test_stereonet.py
 - sample_data/
 - docs/
 
@@ -102,12 +104,22 @@ Exit criteria: met
 - Known test dataset produces expected dip/dip direction values.
 - Invalid rows are reported without crashing.
 
-Milestone 2: Stereonet Plotting (Week 2)
-Deliverables:
-- Standalone plotting module using mplstereonet.
-- Pole plotting and figure export (PNG/SVG).
-- Basic filtering (valid vs invalid computed rows).
-Exit criteria:
+Milestone 2: Stereonet Plotting (Week 2) - Status: Completed
+Completed deliverables:
+- Standalone plotting module implemented using `mplstereonet` (`src/viz/stereonet.py`).
+- Pole plotting and figure export implemented for PNG and SVG.
+- Basic filtering implemented for computed rows and optional CLI filters.
+- Plotting CLI entrypoint implemented (`src/app/stereonet_cli.py`).
+- Plotting dependencies and stereonet test coverage added.
+Validation summary:
+- Full unit test suite passing, including stereonet tests (8/8).
+- End-to-end stereonet export validated on computed sample data:
+  - `sample_data/milestone2_poles.png`
+  - `sample_data/milestone2_poles.svg`
+- Synthetic reference-case reproducibility check completed:
+  - stable filtered row count (`4`)
+  - repeated exports succeeded with consistent artifact size
+Exit criteria: met
 - Correct pole placement verified on synthetic reference cases.
 - Exported figures are reproducible.
 
@@ -156,10 +168,10 @@ Risk: UI tightly coupled to domain logic.
 Mitigation: Enforce domain API boundaries and test computation modules independently.
 
 11) Immediate Next Actions (This Week)
-1. Begin Milestone 2 stereonet plotting module (poles first).
-2. Add synthetic reference datasets for pole placement checks.
-3. Implement figure export (PNG/SVG) from the plotting workflow.
-4. Add plotting-focused tests and validation examples.
+1. Begin Milestone 3 UI scaffolding (main window + action wiring).
+2. Integrate table preview and computed-results log in UI.
+3. Embed matplotlib stereonet canvas and connect plotting actions.
+4. Add UI smoke tests and manual end-to-end workflow checks.
 
 12) Definition of Done (MVP)
 MVP is done when a user can:
