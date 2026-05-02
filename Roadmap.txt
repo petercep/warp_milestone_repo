@@ -67,8 +67,7 @@ D. Visualization layer (matplotlib + mplstereonet)
 6) Data Contract (MVP)
 Required input fields:
 - hole_id
-- depth_from
-- depth_to
+- depth
 - alpha
 - beta
 - trend_of_hole
@@ -83,17 +82,21 @@ Optional fields:
 Validation rules:
 - Numeric parsing for angle/depth fields.
 - Angle bounds configurable by convention:
-  - alpha: 0-360 (or 0-180 based on selected method)
-  - beta: 0-90
+  - alpha: 0-90 (plane/core-axis angle)
+  - beta: 0-360 (clockwise downhole angle from reference line)
 - Row-level error reporting with row index and reason.
 
 7) Milestones and Deliverables
-Milestone 1: Computation CLI (Week 1)
-Deliverables:
+Milestone 1: Computation CLI (Week 1) - Status: Completed
+Completed deliverables:
 - CLI script: import -> validate -> compute -> export CSV.
 - Initial convention configuration.
 - Unit tests for geometry conversion.
-Exit criteria:
+- Sample input/output and validation error artifacts.
+Validation summary:
+- Unit test suite passing (geometry, validation, and pipeline tests).
+- Sample pipeline run completed successfully with invalid-row reporting.
+Exit criteria: met
 - Known test dataset produces expected dip/dip direction values.
 - Invalid rows are reported without crashing.
 
@@ -151,10 +154,10 @@ Risk: UI tightly coupled to domain logic.
 Mitigation: Enforce domain API boundaries and test computation modules independently.
 
 11) Immediate Next Actions (This Week)
-1. Finalize and document one canonical measurement convention.
-2. Build Milestone 1 CLI pipeline with sample data.
-3. Add baseline geometry/validation tests.
-4. Prepare 3 synthetic validation cases with known expected orientations.
+1. Begin Milestone 2 stereonet plotting module (poles first).
+2. Add synthetic reference datasets for pole placement checks.
+3. Implement figure export (PNG/SVG) from the plotting workflow.
+4. Add plotting-focused tests and validation examples.
 
 12) Definition of Done (MVP)
 MVP is done when a user can:
