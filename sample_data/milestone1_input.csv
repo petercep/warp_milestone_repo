@@ -1,0 +1,4 @@
+hole_id,depth,alpha,beta,trend_of_hole,plunge_of_hole,core_orientation_reference
+BH-01,12.5,20.0,35.0,45.0,10.0,180.0
+BH-01,13.0,42.0,120.0,45.0,10.0,180.0
+BH-02,8.2,30.0,300.0,210.0,-6.0,180.0
