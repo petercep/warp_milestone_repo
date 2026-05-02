@@ -12,6 +12,28 @@ import matplotlib.pyplot as plt
 import mplstereonet  # noqa: F401
 import pandas as pd
 
+from src.config.defaults import (
+    DEFAULT_STEREONET_POLAR_GRID,
+    DEFAULT_STEREONET_PROJECTION,
+    SUPPORTED_STEREONET_PROJECTIONS,
+)
+
+_MPLSTEREONET_PROJECTION_BY_CONFIG_NAME = {
+    "equal-area": "equal_area_stereonet",
+    "equal-angle": "equal_angle_stereonet",
+}
+
+
+def _resolve_stereonet_projection(projection: str) -> str:
+    projection_name = projection.strip().lower()
+    if projection_name not in _MPLSTEREONET_PROJECTION_BY_CONFIG_NAME:
+        supported = ", ".join(SUPPORTED_STEREONET_PROJECTIONS)
+        raise ValueError(
+            f"Unsupported stereonet projection '{projection}'. "
+            f"Expected one of: {supported}."
+        )
+    return _MPLSTEREONET_PROJECTION_BY_CONFIG_NAME[projection_name]
+
 
 def _add_polar_grid_overlay(fig: plt.Figure, reference_ax: plt.Axes) -> None:
     """Overlay a simple polar-style grid beneath a stereonet axis."""
@@ -65,7 +87,8 @@ def plot_poles(
     output_path: str | Path,
     filters: Mapping[str, Any] | None = None,
     title: str | None = None,
-    polar_grid: bool = False,
+    projection: str = DEFAULT_STEREONET_PROJECTION,
+    polar_grid: bool = DEFAULT_STEREONET_POLAR_GRID,
 ) -> Path:
     """Plot poles on stereonet and export PNG/SVG."""
     filtered = filter_computed_rows(df, filters=filters)
@@ -78,7 +101,7 @@ def plot_poles(
         raise ValueError("Unsupported plot format. Use .png or .svg output.")
 
     fig = plt.figure(figsize=(6, 6))
-    ax = fig.add_subplot(111, projection="stereonet")
+    ax = fig.add_subplot(111, projection=_resolve_stereonet_projection(projection))
     fig.subplots_adjust(top=0.78)
     if polar_grid:
         _add_polar_grid_overlay(fig, ax)

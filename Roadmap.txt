@@ -110,10 +110,11 @@ Completed deliverables:
 - Pole plotting and figure export implemented for PNG and SVG.
 - Basic filtering implemented for computed rows and optional CLI filters.
 - Plotting CLI entrypoint implemented (`src/app/stereonet_cli.py`).
-- Polar grid overlay support implemented via CLI flag (`--polar-grid`).
+- Stereonet configuration defaults added in `src/config/defaults.py` with projection mode support (`equal-area` default, optional `equal-angle`) and polar-grid control.
+- CLI options expose projection selection and grid toggling (`--projection`, `--polar-grid`, `--no-polar-grid`).
 - Plotting dependencies and stereonet test coverage added.
 Validation summary:
-- Full unit test suite passing, including stereonet tests (8/8).
+- Full unit test suite passing, including stereonet and stereonet CLI configuration tests (13/13).
 - End-to-end stereonet export validated on computed sample data:
   - `sample_data/milestone2_poles.png`
   - `sample_data/milestone2_poles.svg`

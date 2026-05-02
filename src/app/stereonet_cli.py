@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import argparse
 
+from src.config.defaults import (
+    DEFAULT_STEREONET_POLAR_GRID,
+    DEFAULT_STEREONET_PROJECTION,
+    SUPPORTED_STEREONET_PROJECTIONS,
+)
 from src.data.io import load_table
 from src.viz.stereonet import plot_poles
 
@@ -15,9 +20,22 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--title", default=None, help="Optional plot title.")
     parser.add_argument("--hole-id", default=None, help="Optional hole_id filter.")
     parser.add_argument(
+        "--projection",
+        default=DEFAULT_STEREONET_PROJECTION,
+        choices=sorted(SUPPORTED_STEREONET_PROJECTIONS),
+        help=(
+            "Stereonet projection mode "
+            f"(default: {DEFAULT_STEREONET_PROJECTION})."
+        ),
+    )
+    parser.add_argument(
         "--polar-grid",
-        action="store_true",
-        help="Overlay a polar-style grid beneath the stereonet.",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_STEREONET_POLAR_GRID,
+        help=(
+            "Enable/disable polar-style grid overlay beneath the stereonet "
+            f"(default: {DEFAULT_STEREONET_POLAR_GRID})."
+        ),
     )
     parser.add_argument(
         "--structure-type", default=None, help="Optional structure_type filter."
@@ -41,6 +59,7 @@ def main() -> int:
         output_path=args.output,
         filters=filters or None,
         title=args.title,
+        projection=args.projection,
         polar_grid=args.polar_grid,
     )
     print(f"Stereonet export complete: {out}")

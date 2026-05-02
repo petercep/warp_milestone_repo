@@ -45,3 +45,28 @@ class TestStereonet(unittest.TestCase):
             plot_poles(df, out, title="Test", polar_grid=True)
             self.assertTrue(out.exists())
             self.assertGreater(out.stat().st_size, 0)
+
+    def test_plot_poles_exports_png_equal_angle_projection(self):
+        df = pd.DataFrame(
+            [
+                {"hole_id": "A", "dip": 35.0, "dip_direction": 120.0, "strike": 30.0},
+                {"hole_id": "B", "dip": 50.0, "dip_direction": 210.0, "strike": 120.0},
+            ]
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out = Path(tmp_dir) / "stereonet_equal_angle.png"
+            plot_poles(df, out, title="Test", projection="equal-angle")
+            self.assertTrue(out.exists())
+            self.assertGreater(out.stat().st_size, 0)
+
+    def test_plot_poles_rejects_invalid_projection(self):
+        df = pd.DataFrame(
+            [
+                {"hole_id": "A", "dip": 35.0, "dip_direction": 120.0, "strike": 30.0},
+                {"hole_id": "B", "dip": 50.0, "dip_direction": 210.0, "strike": 120.0},
+            ]
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out = Path(tmp_dir) / "stereonet_invalid_projection.png"
+            with self.assertRaises(ValueError):
+                plot_poles(df, out, title="Test", projection="not-a-projection")
