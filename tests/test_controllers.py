@@ -1,5 +1,6 @@
 import unittest
 from pathlib import Path
+import tempfile
 
 import pandas as pd
 
@@ -162,6 +163,8 @@ class TestMainWindowController(unittest.TestCase):
         controller.handle_import("sample_data/milestone1_input.csv")
         controller.handle_calculate()
         self.assertIsNotNone(controller.last_calculation_summary)
+        controller.last_export_path = Path("dummy_computed.csv")
+        controller.last_issues_export_path = Path("dummy_issues.csv")
 
         controller.handle_import("sample_data/does_not_exist.csv")
 
@@ -170,8 +173,10 @@ class TestMainWindowController(unittest.TestCase):
         self.assertIsNone(controller.imported_df)
         self.assertIsNone(controller.computed_df)
         self.assertIsNone(controller.last_calculation_summary)
+        self.assertIsNone(controller.last_export_path)
+        self.assertIsNone(controller.last_issues_export_path)
 
-    def test_handle_export_after_import_sets_placeholder_path(self):
+    def test_handle_export_without_calculate_emits_error(self):
         statuses: list[str] = []
         errors: list[str] = []
         controller = MainWindowController(
@@ -181,8 +186,61 @@ class TestMainWindowController(unittest.TestCase):
         controller.handle_import("sample_data/milestone1_input.csv")
 
         controller.handle_export()
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(
+            errors[-1], "No calculated results available. Use Calculate first."
+        )
+        self.assertIsNone(controller.last_export_path)
+        self.assertIsNone(controller.last_issues_export_path)
 
-        self.assertEqual(errors, [])
-        self.assertIsNotNone(controller.last_export_path)
-        self.assertEqual(controller.last_export_path.name, "export_placeholder.csv")
-        self.assertIn("Export action triggered", statuses[-1])
+    def test_handle_export_after_calculate_writes_output_files(self):
+        statuses: list[str] = []
+        errors: list[str] = []
+        controller = MainWindowController(
+            status_sink=statuses.append,
+            error_sink=errors.append,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            input_path = Path(tmp_dir) / "input.csv"
+            input_df = pd.DataFrame(
+                [
+                    {
+                        "hole_id": "A",
+                        "depth": 1.0,
+                        "alpha": 15.0,
+                        "beta": 35.0,
+                        "trend_of_hole": 45.0,
+                        "plunge_of_hole": 10.0,
+                        "core_orientation_reference": 180.0,
+                    },
+                    {
+                        "hole_id": "B",
+                        "depth": 2.0,
+                        "alpha": 145.0,
+                        "beta": 35.0,
+                        "trend_of_hole": 45.0,
+                        "plunge_of_hole": 10.0,
+                        "core_orientation_reference": 180.0,
+                    },
+                ]
+            )
+            input_df.to_csv(input_path, index=False)
+
+            controller.handle_import(str(input_path))
+            controller.handle_calculate()
+            controller.handle_export()
+
+            self.assertEqual(errors, [])
+            self.assertIn("Export complete:", statuses[-1])
+            self.assertIsNotNone(controller.last_export_path)
+            self.assertIsNotNone(controller.last_issues_export_path)
+            self.assertTrue(controller.last_export_path.exists())
+            self.assertTrue(controller.last_issues_export_path.exists())
+
+            exported_computed = pd.read_csv(controller.last_export_path)
+            exported_issues = pd.read_csv(controller.last_issues_export_path)
+            self.assertTrue(
+                {"dip", "dip_direction", "strike"}.issubset(exported_computed.columns)
+            )
+            self.assertGreaterEqual(len(exported_issues), 1)
