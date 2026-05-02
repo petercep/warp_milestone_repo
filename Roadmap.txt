@@ -135,14 +135,17 @@ Exit criteria: met
 - Deferred TODO (post-Milestone 2):
   - Improve plotting options (deferred for a later pass).
 
-Milestone 3: Desktop UI (Week 3-4) - Status: In Progress
+Milestone 3: Desktop UI (Week 3-4) - Status: Completed
 Deliverables:
 - PySide6 main window: Import, Calculate, Plot, Export.
 - Table preview + output log + embedded matplotlib canvas (implemented).
 - Plot action wiring with projection/polar-grid controls and controller guard behavior (implemented, with controller tests).
 - Controller dependency-path/import-chain fixes completed (added `src/config/defaults.py`, `src/data/*`, `src/domain/*`, and controller test fixtures).
 - Error dialogs and non-blocking status updates.
-Exit criteria:
+Validation summary:
+- Controller/UI action smoke tests completed successfully (`tests.test_controllers` passing).
+- Manual end-to-end workflow check completed successfully (`Import -> Calculate -> Plot -> Export`) with exported output artifacts generated.
+Exit criteria: met
 - End-to-end workflow succeeds from raw file to exported outputs.
 - No geology logic in UI classes.
 
@@ -182,10 +185,10 @@ Risk: UI tightly coupled to domain logic.
 Mitigation: Enforce domain API boundaries and test computation modules independently.
 
 11) Immediate Next Actions (This Week)
-1. Complete UI smoke tests for plotting controls and action flows.
-2. Run a manual end-to-end workflow check (Import -> Calculate -> Plot -> Export).
-3. Address deferred plotting-options refinements identified in Milestone 2.
-4. Prepare Milestone 3 completion checklist against exit criteria.
+1. Begin Milestone 4 hardening work with cross-platform path handling review.
+2. Add packaging baseline (PyInstaller configuration and first build script pass).
+3. Draft user guide updates for desktop workflow and troubleshooting.
+4. Run packaged-build smoke checks on target environments.
 
 12) Definition of Done (MVP)
 MVP is done when a user can:
