@@ -11,6 +11,10 @@ from src.config.defaults import (
     DEFAULT_STEREONET_PROJECTION,
     SUPPORTED_STEREONET_PROJECTIONS,
 )
+from src.data.column_mapping import (
+    OPTIONAL_REFERENCE_ALIASES,
+    REQUIRED_COLUMN_ALIASES,
+)
 
 try:
     import mplstereonet  # noqa: F401
@@ -52,7 +56,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("Geology Workstation - Milestone 3 Scaffold")
+        self.setWindowTitle("Convert Alpha Beta")
         self.resize(980, 680)
 
         self.status_label = QLabel("Ready. Use Import to select input data.")
@@ -84,6 +88,7 @@ class MainWindow(QMainWindow):
 
         self._build_layout()
         self._build_toolbar()
+        self._build_menu()
         self._append_log("UI scaffold initialized.")
         self._render_empty_canvas()
 
@@ -140,12 +145,31 @@ class MainWindow(QMainWindow):
         plot_action.triggered.connect(self._on_plot_triggered)
         export_action.triggered.connect(self._on_export_triggered)
 
+    def _build_menu(self) -> None:
+        help_menu = self.menuBar().addMenu("Help")
+        accepted_names_action = help_menu.addAction("Accepted column names")
+        accepted_names_action.triggered.connect(self._show_accepted_column_names)
+
+    def _show_accepted_column_names(self) -> None:
+        required_lines = [
+            f"- {canonical}: {', '.join(aliases)}"
+            for canonical, aliases in REQUIRED_COLUMN_ALIASES.items()
+        ]
+        optional_reference = ", ".join(OPTIONAL_REFERENCE_ALIASES)
+        message = (
+            "Required input columns (accepted aliases):\n"
+            + "\n".join(required_lines)
+            + "\n\nOptional reference column aliases:\n"
+            + f"- reference line: {optional_reference}"
+        )
+        QMessageBox.information(self, "Accepted column names", message)
+
     def _on_import_triggered(self) -> None:
         file_path, _ = QFileDialog.getOpenFileName(
             self,
             "Select input file",
             "",
-            "Data files (*.csv *.xlsx *.xlsm);;All files (*)",
+            "Data files (*.csv *.ods *.xlsx *.xlsm);;All files (*)",
         )
         self.controller.handle_import(file_path or None)
         self._refresh_previews_after_import()
@@ -250,7 +274,6 @@ class MainWindow(QMainWindow):
         self.stereonet_figure.subplots_adjust(top=0.86)
         if polar_grid_enabled:
             self._add_polar_grid_overlay(ax)
-        ax.grid(True)
         ax.pole(
             plotted_df["strike"].astype(float).to_numpy(copy=True),
             plotted_df["dip"].astype(float).to_numpy(copy=True),

@@ -14,10 +14,13 @@ REQUIRED_COLUMNS = (
     "depth",
     "alpha",
     "beta",
-    "trend_of_hole",
-    "plunge_of_hole",
+    "trend",
+    "plunge",
 )
-NUMERIC_COLUMNS = ("depth", "alpha", "beta", "trend_of_hole", "plunge_of_hole")
+NUMERIC_COLUMNS = ("depth", "alpha", "beta", "trend", "plunge")
+OPTIONAL_REFERENCE_COLUMNS = ("ref",)
+REFERENCE_MIN = 0.0
+REFERENCE_MAX = 359.0
 
 
 @dataclass(frozen=True)
@@ -85,6 +88,38 @@ def validate_dataframe(
                     source_row=int(source_row),
                     column=invalid_numeric_column,
                     message=f"Non-numeric value in '{invalid_numeric_column}'.",
+                )
+            )
+            continue
+
+        invalid_reference_column: str | None = None
+        invalid_reference_message: str | None = None
+        for column in OPTIONAL_REFERENCE_COLUMNS:
+            if column not in row_data:
+                continue
+            if pd.isna(row_data[column]):
+                continue
+            reference_value = _as_float(row_data[column])
+            if reference_value is None:
+                invalid_reference_column = column
+                invalid_reference_message = (
+                    f"Non-numeric value in optional '{column}'."
+                )
+                break
+            if not (REFERENCE_MIN <= reference_value <= REFERENCE_MAX):
+                invalid_reference_column = column
+                invalid_reference_message = (
+                    "Reference line out of range: "
+                    f"{reference_value} not in [{REFERENCE_MIN}, {REFERENCE_MAX}]."
+                )
+                break
+            numeric_values[column] = reference_value
+        if invalid_reference_column is not None:
+            issues.append(
+                _Issue(
+                    source_row=int(source_row),
+                    column=invalid_reference_column,
+                    message=invalid_reference_message or "Invalid reference value.",
                 )
             )
             continue
