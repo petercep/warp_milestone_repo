@@ -24,6 +24,11 @@ class TestMainWindowController(unittest.TestCase):
         self.assertIsNotNone(controller.selected_input_path)
         self.assertIsNotNone(controller.imported_df)
         self.assertGreater(len(controller.imported_df), 0)
+        self.assertTrue(
+            {"hole_id", "depth", "alpha", "beta", "trend", "plunge"}.issubset(
+                controller.imported_df.columns
+            )
+        )
 
     def test_handle_import_with_missing_file_emits_error(self):
         statuses: list[str] = []
@@ -54,6 +59,75 @@ class TestMainWindowController(unittest.TestCase):
         self.assertEqual(statuses, [])
         self.assertEqual(len(errors), 1)
         self.assertIn("Import failed", errors[0])
+        self.assertIsNone(controller.selected_input_path)
+        self.assertIsNone(controller.imported_df)
+
+    def test_handle_import_alias_renaming_for_required_columns(self):
+        statuses: list[str] = []
+        errors: list[str] = []
+        controller = MainWindowController(
+            status_sink=statuses.append,
+            error_sink=errors.append,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            input_path = Path(tmp_dir) / "alias_input.csv"
+            pd.DataFrame(
+                [
+                    {
+                        "hole": "A",
+                        "distance": 1.0,
+                        "alfa": 25.0,
+                        "beta": 35.0,
+                        "azimuth": 40.0,
+                        "hole_dip": 12.0,
+                        "reference_line": 170.0,
+                    }
+                ]
+            ).to_csv(input_path, index=False)
+
+            controller.handle_import(str(input_path))
+
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(controller.imported_df)
+        self.assertTrue(
+            {"hole_id", "depth", "alpha", "beta", "trend", "plunge", "ref"}.issubset(
+                controller.imported_df.columns
+            )
+        )
+        self.assertAlmostEqual(float(controller.imported_df.iloc[0]["trend"]), 40.0)
+        self.assertAlmostEqual(float(controller.imported_df.iloc[0]["plunge"]), 12.0)
+        self.assertAlmostEqual(float(controller.imported_df.iloc[0]["ref"]), 170.0)
+        self.assertIn("Import complete:", statuses[-1])
+
+    def test_handle_import_missing_required_alias_stops_import(self):
+        statuses: list[str] = []
+        errors: list[str] = []
+        controller = MainWindowController(
+            status_sink=statuses.append,
+            error_sink=errors.append,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            input_path = Path(tmp_dir) / "missing_alias.csv"
+            pd.DataFrame(
+                [
+                    {
+                        "hole_id": "A",
+                        "depth": 1.0,
+                        "alpha": 25.0,
+                        "beta": 35.0,
+                        "plunge": 12.0,
+                    }
+                ]
+            ).to_csv(input_path, index=False)
+
+            controller.handle_import(str(input_path))
+
+        self.assertEqual(statuses, [])
+        self.assertEqual(len(errors), 1)
+        self.assertIn("Import failed", errors[0])
+        self.assertIn("Missing required column(s)", errors[0])
         self.assertIsNone(controller.selected_input_path)
         self.assertIsNone(controller.imported_df)
 
@@ -88,6 +162,11 @@ class TestMainWindowController(unittest.TestCase):
         self.assertTrue(
             {"dip", "dip_direction", "strike"}.issubset(controller.computed_df.columns)
         )
+        self.assertIn("reference_line", controller.computed_df.columns)
+        self.assertNotIn("ref", controller.computed_df.columns)
+        dip_idx = controller.computed_df.columns.get_loc("dip")
+        dip_direction_idx = controller.computed_df.columns.get_loc("dip_direction")
+        self.assertEqual(dip_direction_idx, dip_idx + 1)
 
     def test_handle_calculate_with_invalid_data_emits_error(self):
         statuses: list[str] = []
@@ -127,18 +206,18 @@ class TestMainWindowController(unittest.TestCase):
                     "depth": 1.0,
                     "alpha": 15.0,
                     "beta": 35.0,
-                    "trend_of_hole": 45.0,
-                    "plunge_of_hole": 10.0,
-                    "core_orientation_reference": 180.0,
+                    "trend": 45.0,
+                    "plunge": 10.0,
+                    "ref": 180.0,
                 },
                 {
                     "hole_id": "B",
                     "depth": 2.0,
                     "alpha": 145.0,
                     "beta": 35.0,
-                    "trend_of_hole": 45.0,
-                    "plunge_of_hole": 10.0,
-                    "core_orientation_reference": 180.0,
+                    "trend": 45.0,
+                    "plunge": 10.0,
+                    "ref": 180.0,
                 },
             ]
         )
@@ -153,6 +232,42 @@ class TestMainWindowController(unittest.TestCase):
         )
         self.assertIn("Calculate complete:", statuses[-1])
 
+    def test_handle_calculate_ref_column_overrides_reference_line(self):
+        statuses: list[str] = []
+        errors: list[str] = []
+        controller = MainWindowController(
+            status_sink=statuses.append,
+            error_sink=errors.append,
+        )
+        controller.selected_input_path = Path("ref_override.csv")
+        controller.imported_df = pd.DataFrame(
+            [
+                {
+                    "hole_id": "A",
+                    "depth": 1.0,
+                    "alpha": 20.0,
+                    "beta": 30.0,
+                    "trend": 100.0,
+                    "plunge": 10.0,
+                    "core_orientation_reference": 210.0,
+                    "ref": 150.0,
+                }
+            ]
+        )
+
+        controller.handle_calculate()
+
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(controller.computed_df)
+        self.assertAlmostEqual(
+            float(controller.computed_df.iloc[0]["reference_line"]), 150.0
+        )
+        self.assertAlmostEqual(float(controller.computed_df.iloc[0]["dip"]), 30.0)
+        self.assertAlmostEqual(
+            float(controller.computed_df.iloc[0]["dip_direction"]), 100.0
+        )
+        self.assertNotIn("ref", controller.computed_df.columns)
+        self.assertIn("Calculate complete:", statuses[-1])
     def test_handle_import_failure_clears_previous_calculation_state(self):
         statuses: list[str] = []
         errors: list[str] = []
@@ -238,22 +353,22 @@ class TestMainWindowController(unittest.TestCase):
             input_df = pd.DataFrame(
                 [
                     {
-                        "hole_id": "A",
-                        "depth": 1.0,
-                        "alpha": 15.0,
+                        "hole": "A",
+                        "distance": 1.0,
+                        "alfa": 15.0,
                         "beta": 35.0,
-                        "trend_of_hole": 45.0,
-                        "plunge_of_hole": 10.0,
-                        "core_orientation_reference": 180.0,
+                        "azimuth": 45.0,
+                        "hole_dip": 10.0,
+                        "reference_line": 180.0,
                     },
                     {
-                        "hole_id": "B",
-                        "depth": 2.0,
-                        "alpha": 145.0,
+                        "hole": "B",
+                        "distance": 2.0,
+                        "alfa": 145.0,
                         "beta": 35.0,
-                        "trend_of_hole": 45.0,
-                        "plunge_of_hole": 10.0,
-                        "core_orientation_reference": 180.0,
+                        "azimuth": 45.0,
+                        "hole_dip": 10.0,
+                        "reference_line": 180.0,
                     },
                 ]
             )

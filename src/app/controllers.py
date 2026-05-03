@@ -9,6 +9,7 @@ from typing import Callable
 import pandas as pd
 
 from src.config.defaults import DEFAULT_CONVENTION_NAME
+from src.data.column_mapping import normalize_input_columns
 from src.data.io import load_table, save_table
 from src.data.validation import validate_dataframe
 from src.domain.conventions import get_convention
@@ -60,6 +61,7 @@ class MainWindowController:
 
         try:
             imported_df = load_table(input_path)
+            imported_df = normalize_input_columns(imported_df)
         except Exception as exc:
             self.error_sink(f"Import failed for '{input_path}': {exc}")
             self.selected_input_path = None

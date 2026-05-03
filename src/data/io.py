@@ -13,7 +13,7 @@ def load_table(path: str | Path) -> pd.DataFrame:
     suffix = input_path.suffix.lower()
     if suffix == ".csv":
         return pd.read_csv(input_path)
-    if suffix in {".xlsx", ".xlsm"}:
+    if suffix in {".xlsx", ".xlsm", ".ods"}:
         return pd.read_excel(input_path)
     raise ValueError(f"Unsupported file type: '{suffix or '<none>'}'.")
 
